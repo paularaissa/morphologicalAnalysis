@@ -1,0 +1,94 @@
+import matplotlib.pyplot as plt
+
+from skimage.morphology import convex_hull_image
+from skimage.util import invert
+from skimage import measure            # to find shape contour
+from shapely.geometry import Polygon
+from scipy.spatial import ConvexHull
+import scipy.ndimage as ndi            # to determine shape centrality
+from skimage.measure import label
+from skimage.measure import regionprops
+
+import numpy
+
+tiff_file = '/home/paula/Doutoramento/imagesTiff/Actin_Steady_State_1/edit/Actin_Steady_State_1-1.tiff'
+
+tiff_image = plt.imread(tiff_file)
+
+image = invert(tiff_image)
+
+chull = convex_hull_image(image)
+
+# using image processing module of scipy to find the center of the convex hull
+cy, cx = ndi.center_of_mass(chull)
+#plt.imshow(chull, cmap='Set3')  # show me the convex hull
+#plt.scatter(cx, cy)           # show me its center
+#plt.show()
+
+#Find Countours
+contours = measure.find_contours(image, .8)
+contour = max(contours, key=len)
+
+# let us see the contour that we hopefully found
+#plt.plot(contour[::,1], contour[::,0], linewidth=0.5)  # (I will explain this [::,x] later)
+#plt.imshow(image, cmap='Set3')
+#plt.show()
+
+#polygon = Polygon(contour)
+#area = polygon.area
+
+labels2 = label(chull,background=0)
+for region in regionprops(labels2):
+    CHA_area = region.area
+    CHA_perimeter = region.perimeter
+
+#Cell area
+label_area = label(image, background=0)
+for region in regionprops(label_area):
+    cell_area = region.area
+    cell_perimeter = region.perimeter
+
+density = cell_area / CHA_area
+
+roughness = cell_perimeter / CHA_perimeter
+
+chc = (4*3.14 * CHA_area) / (CHA_perimeter)
+
+print(chc)
+
+#fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+#ax = axes.ravel()
+
+#ax[0].set_title('Original picture')
+#ax[0].imshow(image, cmap=plt.cm.gray)
+#ax[0].set_axis_off()
+
+#ax[1].set_title('Transformed picture')
+#ax[1].imshow(chull, cmap=plt.cm.gray)
+#ax[1].set_axis_off()
+
+#points = numpy.array([[-1,-1], [1,1], [-1, 1], [1,-1]])
+
+#area = sum(chull)
+
+#print(area)
+
+
+#polygon = Polygon(chull)
+
+#area = 0
+#q = chull[-1]
+#for p in chull:
+#    area += p[0] * q[1] ^ p[1] * q[0]
+#    q = p
+#total = area / 2
+
+
+#volume = chull.volume
+
+#print(total)
+
+#plt.show()
+#plt.tight_layout()
+
+
